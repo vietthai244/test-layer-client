@@ -1,10 +1,13 @@
 import './App.css'
-import Game from './Game'
+import Page from './Page'
+import { BrowserRouter } from 'react-router-dom'
 
 function App() {
   return (
     <div className="App">
-      <Game />
+      <BrowserRouter>
+        <Page />
+      </BrowserRouter>
     </div>
   )
 }
