@@ -6,6 +6,7 @@ import { sleep } from './utils'
 export default function Game({ index }) {
   const [start, setStart] = useState(false)
   const [matchData, setMatchData] = useState()
+  const [timer, setTimer] = useState(0)
 
 
   const connect = async () => {
@@ -17,45 +18,48 @@ export default function Game({ index }) {
       const password = '12345678'
       const session = await client.login(email, password)
       console.log(`bot${index} CONNECTED`)
-      await sleep(100)
-      await client.socket.connect(session, true)
-      client.socket.onmatchdata(data => {
+      const socket = client.createSocket(false)
+      await socket.connect(session, true)
+
+      socket.onmatchpresence = (matchPresenceEvent) => {
+        console.log('MATCH PRESENCE', matchPresenceEvent)
+      }
+
+      const result = await client.listMatches(client.session)
+      if (!result || !result?.matches?.length) {
+        const matchData = await client.rpc(client.session, 'create-match', {})
+        setMatchData(matchData)
+        setStart(true)
+        console.log('NEW MATCH CREATED: ', matchData)
+      } else {
+        const match = result.matches[0]
+        const matchData = await socket.joinMatch(match.match_id)
+        console.log('JOINED MATCH', matchData)
+        setMatchData(matchData)
+      }
+
+      socket.onmatchdata(data => {
         console.log('MATCH DATA', data)
       })
-      await sleep(100)
-      await findMatch()
     } catch (e) {
       console.error(e)
       alert('Login failed')
     }
   }
 
-  const findMatch = async () => {
-    const result = await client.listMatches(client.session)
-    if (!result || !result?.matches?.length) {
-      const matchData = await client.socket.createMatch(`BOT${index}-MATCH`)
-      setMatchData(matchData)
-      setStart(true)
-      console.log('NEW MATCH CREATED: ', matchData.match_id)
-    } else {
-      const match = result.matches[0]
-      const matchData = await client.socket.joinMatch(match.match_id)
-      console.log('JOINED MATCH', match.match_id)
-      setMatchData(matchData)
-    }
-  }
-
   useEffect(() => {
     (async () => {
       await connect()
-      // await sleep(100)
-      // await findMatch()
     })()
   }, [])
 
   useTick((delta) => {
     if (start) {
-      console.log('TICKER')
+      if (timer + delta > 3) {
+        setTimer(0)
+      } else {
+        setTimer(timer + delta)
+      }
     }
   })
 
