@@ -9,7 +9,7 @@ const timeout = 10000 // ms
 const autoRefreshSession = true
 
 class Client extends LGClient {
-  socket = this.createSocket(false)
+  socket = this.createSocket(false, true)
   session
 
   async login(email, password) {

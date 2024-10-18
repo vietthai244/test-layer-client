@@ -1,13 +1,20 @@
-import { Container, useTick } from '@pixi/react'
+import { Container, useTick, Text, Sprite } from '@pixi/react'
 import { useEffect, useMemo, useState } from 'react'
 import client from './client'
-import { sleep } from './utils'
+import { TextStyle } from 'pixi.js'
+import { json } from 'react-router-dom'
 
 export default function Game({ index }) {
   const [start, setStart] = useState(false)
   const [matchData, setMatchData] = useState()
   const [timer, setTimer] = useState(0)
+  const [socket, setSocket] = useState(client.createSocket(false, true))
 
+  const sendMessage = async () => {
+    console.log('SEND')
+    await socket.sendMatchState(matchData.match_id, 1, JSON.stringify({ data: 'data' }))
+
+  }
 
   const connect = async () => {
     try {
@@ -18,12 +25,7 @@ export default function Game({ index }) {
       const password = '12345678'
       const session = await client.login(email, password)
       console.log(`bot${index} CONNECTED`)
-      const socket = client.createSocket(false)
       await socket.connect(session, true)
-
-      socket.onmatchpresence = (matchPresenceEvent) => {
-        console.log('MATCH PRESENCE', matchPresenceEvent)
-      }
 
       const result = await client.listMatches(client.session)
       if (!result || !result?.matches?.length) {
@@ -37,10 +39,6 @@ export default function Game({ index }) {
         console.log('JOINED MATCH', matchData)
         setMatchData(matchData)
       }
-
-      socket.onmatchdata(data => {
-        console.log('MATCH DATA', data)
-      })
     } catch (e) {
       console.error(e)
       alert('Login failed')
@@ -49,6 +47,28 @@ export default function Game({ index }) {
 
   useEffect(() => {
     (async () => {
+      socket.onmatchpresence = (matchPresenceEvent) => {
+        console.log('MATCH PRESENCE', matchPresenceEvent)
+      }
+
+      socket.onmatchdata(matchState => {
+        console.log(matchState)
+        switch (matchState.opCode) {
+          case 1:
+            // Get the updated position data
+            const stateJson = matchState.state;
+            const state = JSON.parse(stateJson);
+            console.log(state)
+            break;
+          default:
+            console.log("Unsupported op code");
+            break;
+        }
+      })
+
+      socket.onnotification(noti => {
+        console.log("NOTIFICATION", noti)
+      })
       await connect()
     })()
   }, [])
@@ -65,7 +85,17 @@ export default function Game({ index }) {
 
   return (
     <Container width={800} height={800}>
-
+      <Sprite
+        interactive
+        pointerdown={sendMessage}
+        image="https://pixijs.io/pixi-react/img/coin.png"
+        scale={{ x: 0.5, y: 0.5 }}
+        anchor={0.5}
+        width={40}
+        height={40}
+        x={400}
+        y={400}
+      />
     </Container>
   )
 }
