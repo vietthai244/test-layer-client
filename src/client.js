@@ -19,6 +19,6 @@ class Client extends LGClient {
   }
 }
 
-const client = new Client(serverKey, host, port, useSSL, timeout, autoRefreshSession)
+const getClient = () => new Client(serverKey, host, port, useSSL, timeout, autoRefreshSession)
 
-export default client
+export default getClient
