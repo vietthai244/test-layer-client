@@ -2,13 +2,14 @@ import { Container, Stage } from '@pixi/react'
 import { useEffect, useState } from 'react'
 import Bot from './Bot'
 import getClient from './client'
+import { sleep } from './utils'
 
 const client = getClient()
-const socket = client.createSocket(false)
+const socket = client.createSocket(false, true)
 
 export default function Game() {
   const [start, setStart] = useState(false)
-  const [bots, setBots] = useState(10)
+  const [bots, setBots] = useState(1)
   const [matchData, setMatchData] = useState(null)
 
   const onStart = async () => {
@@ -21,6 +22,7 @@ export default function Game() {
     if (!result || !result?.matches?.length) {
       await client.rpc(client.session, 'create-match', {})
       console.log('NEW MATCH CREATED: ')
+      await sleep(1000)
       const result = await client.listMatches(client.session)
       setMatchData(result.matches[0])
     }

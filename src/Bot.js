@@ -10,7 +10,7 @@ const opCode = {
 }
 
 const client = getClient()
-const socket = client.createSocket()
+const socket = client.createSocket(false, true)
 
 export default function Bot({ index, matchId }) {
   const [start, setStart] = useState(false)
@@ -30,7 +30,7 @@ export default function Bot({ index, matchId }) {
   }, [matchData])
 
   const sendMessage = async (opcode, message) => {
-    console.log('MESSAGE SENT', index)
+    // console.log('MESSAGE SENT', index)
     await socket.sendMatchState(matchData.match_id, opcode, JSON.stringify(message))
   }
 
@@ -58,11 +58,11 @@ export default function Bot({ index, matchId }) {
       const email = `bot${index}@gmail.com`
       const password = '12345678'
       const session = await client.login(email, password)
-      console.log(`bot${index} CONNECTED`)
+      // console.log(`bot${index} CONNECTED`)
       await socket.connect(session, true)
 
       const matchData = await socket.joinMatch(matchId)
-      console.log('JOINED MATCH', matchData)
+      // console.log('JOINED MATCH', matchData)
       setMatchData(matchData)
       setStart(true)
 
