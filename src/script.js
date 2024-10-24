@@ -1,12 +1,13 @@
-const LayerG = require('@layerg/layerg-js')
+const LayerG = require('@heroiclabs/nakama-js')
 const WebSocket = require('ws')
 const { encode } = require('base64-arraybuffer')
 const { btoa } = require('js-base64')
 
 // WebSocket server URL
 const serverKey = 'defaultkey'
-const host = '127.0.0.1'
-const port = '7350'
+// const host = 'mylocal.domain'
+const host = 'localhost'
+const port = '8350'
 // const port = "";
 const useSSL = false
 const timeout = 10000 // ms
@@ -15,9 +16,9 @@ const autoRefreshSession = true
 // WebSocket protocol URL
 const websocketProtocol = useSSL ? 'wss' : 'ws'
 
-const NUMBER_OF_BOTS = 100
-const ACTION_INTERVAL = 5000 //ms
-const BOTS_PER_MATCH = 50
+const NUMBER_OF_BOTS = 1
+const ACTION_INTERVAL = 1000 //ms
+const BOTS_PER_MATCH = 5
 
 
 class Bot extends LayerG.Client {
@@ -32,8 +33,15 @@ class Bot extends LayerG.Client {
 
   async connect(id, matchId) {
     this.id = id
-    this.session = await this.authenticateEmail(`bot${id}@gmail.com`, '12345678')
-    const wsUrl = `${websocketProtocol}://${host}:${port}/ws?lang=en&status=${encodeURIComponent(true.toString())}&token=${encodeURIComponent(this.session.token)}&format=json`
+    console.log('hở', this.id)
+    try {
+      this.session = await this.authenticateEmail(`bot${id}@gmail.com`, '12345678')
+
+    } catch (err) {
+      console.log(err)
+    }
+    // const wsUrl = `${websocketProtocol}://${host}/ws?lang=en&status=${encodeURIComponent(true.toString())}&token=${encodeURIComponent(this.session.token)}&format=json`
+    const wsUrl = `${websocketProtocol}://localhost:${port}/ws?lang=en&status=${encodeURIComponent(true.toString())}&token=${encodeURIComponent(this.session.token)}&format=json`
     const ws = new WebSocket(wsUrl)
     this.ws = ws
 
@@ -52,7 +60,7 @@ class Bot extends LayerG.Client {
     ws.on('message', async (message) => {
       console.log(`Bot ${id} received: ${message}`)
       const data = JSON.parse(message.toString())
-
+      
       if (data.status_presence_event) {
         this.presences = data.status_presence_event.joins
       }
@@ -161,13 +169,19 @@ class Bot extends LayerG.Client {
 
 (async () => {
   const bots = []
-
   const createMatchAndJoinBots = async (start, end) => {
     // Create match
     const admin = new Bot(serverKey, host, port, useSSL, timeout, autoRefreshSession)
     await admin.connect('', undefined)
-    const response = await admin.rpc(admin.session, 'create-match', {})
-    const matchId = response.payload.matchId
+    console.log('session: ', admin.session)
+    let response
+    try {
+      response = await admin.rpc(admin.session, 'create-match', {})
+    } catch (err) {
+      console.log(err)
+    }
+    console.log('he, ',response)
+    const matchId = "4cc3d683-41ab-424b-86eb-5576234a7851.nakama-rUS60n"
 
     // Connect bots to match
     for (let i = start; i < end; i++) {
