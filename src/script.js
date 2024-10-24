@@ -7,7 +7,7 @@ const { btoa } = require('js-base64')
 const serverKey = 'defaultkey'
 // const host = 'mylocal.domain'
 const host = 'localhost'
-const port = '8350'
+const port = '7350'
 // const port = "";
 const useSSL = false
 const timeout = 10000 // ms
@@ -181,7 +181,7 @@ class Bot extends LayerG.Client {
       console.log(err)
     }
     console.log('he, ',response)
-    const matchId = "4cc3d683-41ab-424b-86eb-5576234a7851.nakama-rUS60n"
+    const matchId = "632fd52d-629c-4c62-bb43-784d7c5d0b9e.nakama-O43MDN"
 
     // Connect bots to match
     for (let i = start; i < end; i++) {
