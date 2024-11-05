@@ -20,7 +20,7 @@ export default function Game() {
 
     const result = await client.listMatches(client.session)
     if (!result || !result?.matches?.length) {
-      await client.rpc(client.session, 'create-match', {})
+      await client.rpc(client.session, 'create-match-rpc', {})
       console.log('NEW MATCH CREATED: ')
       await sleep(1000)
       const result = await client.listMatches(client.session)
@@ -48,9 +48,7 @@ export default function Game() {
       {
         !!matchData && (
           <Stage width={800} height={800} options={{ background: 0x000000 }}>
-            <Container width={800} height={800}>
-              {!isNaN(bots) && Array(bots).fill().map((_, index) => <Bot index={index} matchId={matchData.match_id} />)}
-            </Container>
+            <Bot index={1} />
           </Stage>
         )
       }
