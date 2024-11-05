@@ -10,10 +10,11 @@ const opCode = {
 }
 
 const client = getClient()
-const socket = client.createSocket(false, true)
+const socket = client.createSocket(false, false)
 
-export default function Bot({ index, matchId }) {
+export default function Bot({ index }) {
   const [start, setStart] = useState(false)
+  const [ticket, setTicket] = useState('')
   const [matchData, setMatchData] = useState()
   const [timer, setTimer] = useState(0)
   const [position, setPosition] = useState({ x: Math.random() * 800, y: Math.random() * 800 })
@@ -60,16 +61,45 @@ export default function Bot({ index, matchId }) {
       const session = await client.login(email, password)
       // console.log(`bot${index} CONNECTED`)
       await socket.connect(session, true)
+      const { ticket } = await socket.addMatchmaker(
+        '*', 2, 12,
+        {
+          mode: 'deathmatch'
+        },
+        {
+          elo: 10
+        }
+      )
 
-      const matchData = await socket.joinMatch(matchId)
-      // console.log('JOINED MATCH', matchData)
-      setMatchData(matchData)
-      setStart(true)
+      console.log('Matchmaker ticket:', ticket)
+      setTicket(ticket)
 
+      socket.onmatchmakermatched = async (matched) => {
+        console.log("Match found!", matched);
+        const token = matched.token;
+        // console.log("Joined match with ID:", matchId);
+
+        // Optionally, join the match if required
+        const match = await socket.joinMatch(null, token);
+        console.log("Match joined:", match);
+        setMatchData(match)
+      };
+
+      // socket.onmatchdata = (match) => {
+      //   console.log('Match data:', match)
+      //   setMatchData(match)
+      // }
     } catch (e) {
       console.error(`Bot${index} connection error`, e)
       connect()
     }
+  }
+
+  const joinMatch = async (matchId) => {
+    const matchData = await socket.joinMatch(matchId)
+    // console.log('JOINED MATCH', matchData)
+    setMatchData(matchData)
+    setStart(true)
   }
 
   useEffect(() => {
@@ -112,13 +142,14 @@ export default function Bot({ index, matchId }) {
 
   useTick((delta) => {
     if (start) {
-      if (timer + delta > 0.1 * ONE_SECOND) {
-        moveRandomly()
+      if (timer + delta > ONE_SECOND) {
+        // moveRandomly()
         setTimer(0)
 
       } else {
         setTimer(timer + delta)
       }
+      console.log(timer)
     }
   })
 
