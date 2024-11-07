@@ -61,34 +61,37 @@ export default function Bot({ index }) {
       const session = await client.login(email, password)
       // console.log(`bot${index} CONNECTED`)
       await socket.connect(session, true)
-      const { ticket } = await socket.addMatchmaker(
-        '*', 2, 12,
-        {
-          mode: 'deathmatch'
-        },
-        {
-          elo: 10
+
+      const matches = await client.listMatches(session, 10, true, null, null, null, '+label.game_mode:free_for_all')
+      console.log('CREATED MATCHES:', matches)
+      if (matches?.matches?.length) {
+        console.log('JOIN CREATED MATCH')
+        await socket.joinMatch(matches.matches[0].match_id)
+      } else {
+        const { ticket } = await socket.addMatchmaker(
+          '+properties.game_mode:free_for_all', 2, 8,
+          {
+            game_mode: 'free_for_all'
+          },
+          {
+            elo: 10
+          }
+        )
+
+        console.log('Matchmaker ticket:', ticket)
+        setTicket(ticket)
+
+        socket.onmatchmakermatched = async (matched) => {
+          console.log('Match found!', matched)
+          const matchId = matched.match_id
+          // console.log("Joined match with ID:", matchId);
+
+          // Optionally, join the match if required
+          const match = await socket.joinMatch(matchId)
+          console.log('Match joined:', match)
+          setMatchData(matched)
         }
-      )
-
-      console.log('Matchmaker ticket:', ticket)
-      setTicket(ticket)
-
-      socket.onmatchmakermatched = async (matched) => {
-        console.log("Match found!", matched);
-        const token = matched.token;
-        // console.log("Joined match with ID:", matchId);
-
-        // Optionally, join the match if required
-        const match = await socket.joinMatch(null, token);
-        console.log("Match joined:", match);
-        setMatchData(match)
-      };
-
-      // socket.onmatchdata = (match) => {
-      //   console.log('Match data:', match)
-      //   setMatchData(match)
-      // }
+      }
     } catch (e) {
       console.error(`Bot${index} connection error`, e)
       connect()
