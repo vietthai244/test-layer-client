@@ -62,7 +62,7 @@ export default function Bot({ index }) {
       // console.log(`bot${index} CONNECTED`)
       await socket.connect(session, true)
 
-      const matches = await client.listMatches(session, 10, true, null, null, null, '+label.game_mode:free_for_all')
+      const matches = await client.listMatches(session, 10, true, null, null, null, '+label.game_mode:free_for_all +label.status:0')
       console.log('CREATED MATCHES:', matches)
       if (matches?.matches?.length) {
         console.log('JOIN CREATED MATCH')
@@ -73,9 +73,6 @@ export default function Bot({ index }) {
           {
             game_mode: 'free_for_all'
           },
-          {
-            elo: 10
-          }
         )
 
         console.log('Matchmaker ticket:', ticket)
@@ -83,13 +80,10 @@ export default function Bot({ index }) {
 
         socket.onmatchmakermatched = async (matched) => {
           console.log('Match found!', matched)
-          const matchId = matched.match_id
-          // console.log("Joined match with ID:", matchId);
-
           // Optionally, join the match if required
-          const match = await socket.joinMatch(matchId)
+          const match = await socket.joinMatch(matched.match_id, matched.token)
           console.log('Match joined:', match)
-          setMatchData(matched)
+          setMatchData(match)
         }
       }
     } catch (e) {
@@ -110,7 +104,7 @@ export default function Bot({ index }) {
       // console.log('MATCH PRESENCE', matchPresenceEvent)
     }
 
-    socket.onnotification(noti => {
+    socket.onnotification = (noti => {
       console.log('NOTIFICATION', noti)
     })
   }, [])

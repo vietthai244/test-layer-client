@@ -1,6 +1,7 @@
 import { Client as LGClient } from '@layerg/layerg-js'
 
 const serverKey = 'defaultkey'
+// const host = 'zombie-api-dev.layerg.xyz'
 const host = '127.0.0.1'
 const port = '7350'
 // const port = "";
